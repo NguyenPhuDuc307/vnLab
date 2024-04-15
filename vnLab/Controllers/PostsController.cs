@@ -8,7 +8,6 @@ using vnLab.Data;
 using vnLab.Data.Entities;
 using vnLab.Helpers;
 using vnLab.Models;
-using vnLab.Services;
 
 namespace vnLab.Controllers
 {
@@ -16,24 +15,42 @@ namespace vnLab.Controllers
     {
         private readonly vnLabDbContext _context;
         private readonly UserManager<User> _userManager;
-        private readonly IPostsService _postsService;
         private readonly IMapper _mapper;
 
-        public PostsController(vnLabDbContext context, UserManager<User> userManager, IMapper mapper, IPostsService postsService)
+        public PostsController(vnLabDbContext context, UserManager<User> userManager, IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
             _mapper = mapper;
-            _postsService = postsService;
         }
 
         // GET: Posts
-        public async Task<IActionResult> Index(int? pageNumber)
+        [Route("all-posts")]
+        public async Task<IActionResult> Index(string currentFilter, string searchString, int? pageNumber)
         {
-            return View(await _postsService.GetAllPaging(pageNumber, 20));
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            var posts = from m in _context.Posts select m;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                posts = posts.Where(s => s.Title!.Contains(searchString)
+                || s.Title!.Contains(searchString)
+                || s.Content!.Contains(searchString)
+                || s.Tags!.Contains(searchString));
+            }
+            return View(PaginatedList<Post>.Create(await posts.ToListAsync(), pageNumber ?? 1, 20));
         }
 
         // GET: Posts/Details/5
+        [Route("post")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -60,37 +77,42 @@ namespace vnLab.Controllers
 
             // Lấy người dùng hiện tại
             var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
+            if (currentUser != null)
             {
-                throw new InvalidOperationException("User not found.");
-            }
-
-            // Lấy danh sách các thẻ của người dùng
-            var userTags = await _context.UserTags
-                .Where(ut => ut.UserId == currentUser.Id)
-                .Include(ut => ut.Tag)
-                .ToListAsync();
-
-            // Thêm hoặc cập nhật các thẻ của người dùng
-            foreach (var postTag in post.PostTags!)
-            {
-                var userTag = userTags.FirstOrDefault(ut => ut.TagId == postTag.TagId);
-                if (userTag != null)
+                // Lấy người dùng hiện tại
+                if (currentUser == null)
                 {
-                    userTag.Number += 1; // Cập nhật số lần xuất hiện của thẻ
+                    throw new InvalidOperationException("User not found.");
                 }
-                else
+
+                // Lấy danh sách các thẻ của người dùng
+                var userTags = await _context.UserTags
+                    .Where(ut => ut.UserId == currentUser.Id)
+                    .Include(ut => ut.Tag)
+                    .ToListAsync();
+
+                // Thêm hoặc cập nhật các thẻ của người dùng
+                foreach (var postTag in post.PostTags!)
                 {
-                    // Thêm mới thẻ vào danh sách thẻ của người dùng
-                    userTag = new UserTag
+                    var userTag = userTags.FirstOrDefault(ut => ut.TagId == postTag.TagId);
+                    if (userTag != null)
                     {
-                        UserId = currentUser.Id,
-                        TagId = postTag.TagId,
-                        Number = 1
-                    };
-                    _context.UserTags.Add(userTag);
+                        userTag.Number += 1; // Cập nhật số lần xuất hiện của thẻ
+                    }
+                    else
+                    {
+                        // Thêm mới thẻ vào danh sách thẻ của người dùng
+                        userTag = new UserTag
+                        {
+                            UserId = currentUser.Id,
+                            TagId = postTag.TagId,
+                            Number = 1
+                        };
+                        _context.UserTags.Add(userTag);
+                    }
                 }
             }
+
             await _context.SaveChangesAsync();
 
             return View(post);
@@ -104,82 +126,136 @@ namespace vnLab.Controllers
         }
 
         // GET: Posts/Create
-        public IActionResult Create()
+        [Route("new")]
+        public async Task<IActionResult> Create()
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
             return View();
         }
 
         // POST: Posts/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost("new")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Content,Asked,Modified,Viewed")] Post post)
+        public async Task<IActionResult> Create([Bind("Id,Title,Content,Tags")] Post post)
         {
-            if (ModelState.IsValid)
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null)
             {
-                _context.Add(post);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    post.Asked = DateTime.Now;
+                    post.Modified = DateTime.Now;
+                    post.Viewed = 0;
+                    post.UserId = currentUser.Id;
+                    _context.Add(post);
+                    await _context.SaveChangesAsync();
+
+                    if (post.Tags != null)
+                    {
+                        foreach (var labelText in post.Tags.Split(new char[] { '<', '>' }, StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            if (labelText == null) continue;
+                            var tagId = TextHelper.ToUnsignedString(labelText.ToString()); var existingLabel = await _context.Tags.FindAsync(tagId);
+                            if (existingLabel == null)
+                            {
+                                var labelEntity = new Tag()
+                                {
+                                    Id = tagId,
+                                    Name = labelText.ToString()
+                                };
+                                _context.Tags.Add(labelEntity);
+                            }
+                            if (await _context.PostTags.FindAsync(tagId, post.Id) == null)
+                            {
+                                _context.PostTags.Add(new PostTag()
+                                {
+                                    PostId = post.Id,
+                                    TagId = tagId
+                                });
+                            }
+                        }
+                    }
+
+                    return RedirectToAction(nameof(Index));
+                }
+                return View(post);
             }
-            return View(post);
+            return RedirectToPage("/Account/Login", new { area = "Identity" });
         }
 
-        public IActionResult Import()
+        [Route("import")]
+        public async Task<IActionResult> Import()
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("import")]
         [ValidateAntiForgeryToken]
         [DisableRequestSizeLimit]
         public async Task<IActionResult> Import(PostImportRequest request)
         {
-            if (request.File != null)
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null)
             {
-                List<PostCSV> dataList = new List<PostCSV>();
-                using (TextFieldParser parser = new TextFieldParser(request.File!.OpenReadStream()))
+                if (request.File != null)
                 {
-                    parser.TextFieldType = FieldType.Delimited;
-                    parser.SetDelimiters(",");
-
-                    // skip the header line
-                    parser.ReadLine();
-                    int idCounter = 1;
-
-                    while (!parser.EndOfData)
+                    List<PostCSV> dataList = new List<PostCSV>();
+                    using (TextFieldParser parser = new TextFieldParser(request.File!.OpenReadStream()))
                     {
-                        string[] fields = parser.ReadFields()!;
-                        PostCSV data = new PostCSV();
-                        data.Id = int.Parse(fields[0]);
-                        data.Title = fields[1];
-                        data.Body = fields[2];
-                        data.Tags = fields[3].Split(new char[] { '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
-                        data.CreationDate = DateTime.ParseExact(fields[4], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-                        data.Y = fields[5];
-                        dataList.Add(data);
-                        idCounter++;
-                    }
-                }
+                        parser.TextFieldType = FieldType.Delimited;
+                        parser.SetDelimiters(",");
 
-                List<PostCreateRequest> listPostRQ = _mapper.Map<List<PostCSV>, List<PostCreateRequest>>(dataList);
+                        // skip the header line
+                        parser.ReadLine();
+                        int idCounter = 1;
 
-                foreach (var postRQ in listPostRQ)
-                {
-                    Post post = _mapper.Map<PostCreateRequest, Post>(postRQ);
-                    _context.Posts.Add(post);
-                    await _context.SaveChangesAsync();
-                    //Process label
-                    if (postRQ.Tags?.Length > 0)
-                    {
-                        await ProcessLabel(postRQ, post);
+                        while (!parser.EndOfData)
+                        {
+                            string[] fields = parser.ReadFields()!;
+                            PostCSV data = new PostCSV();
+                            data.Id = int.Parse(fields[0]);
+                            data.Title = fields[1];
+                            data.Body = fields[2];
+                            data.Tags = fields[3].Split(new char[] { '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
+                            data.CreationDate = DateTime.ParseExact(fields[4], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                            data.Y = fields[5];
+                            dataList.Add(data);
+                            idCounter++;
+                        }
                     }
 
-                    var result = await _context.SaveChangesAsync();
+                    List<PostCreateRequest> listPostRQ = _mapper.Map<List<PostCSV>, List<PostCreateRequest>>(dataList);
+
+                    foreach (var postRQ in listPostRQ)
+                    {
+                        Post post = _mapper.Map<PostCreateRequest, Post>(postRQ);
+                        post.UserId = currentUser.Id;
+                        _context.Posts.Add(post);
+                        await _context.SaveChangesAsync();
+                        //Process label
+                        if (postRQ.Tags?.Length > 0)
+                        {
+                            await ProcessLabel(postRQ, post);
+                        }
+
+                        var result = await _context.SaveChangesAsync();
+                    }
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction(nameof(Index));
+                return View(request);
             }
-            return View(request);
+            return RedirectToPage("/Account/Login", new { area = "Identity" });
         }
 
         private async Task ProcessLabel(PostCreateRequest request, Post post)
@@ -212,6 +288,7 @@ namespace vnLab.Controllers
         }
 
         // GET: Posts/Edit/5
+        [Route("edit")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -230,7 +307,7 @@ namespace vnLab.Controllers
         // POST: Posts/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost("edit")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content,Asked,Modified,Viewed")] Post post)
         {
@@ -263,6 +340,7 @@ namespace vnLab.Controllers
         }
 
         // GET: Posts/Delete/5
+        [Route("delete")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -281,7 +359,7 @@ namespace vnLab.Controllers
         }
 
         // POST: Posts/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost("delete"), ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -300,7 +378,7 @@ namespace vnLab.Controllers
             return _context.Posts.Any(e => e.Id == id);
         }
 
-        [HttpPost]
+        [HttpPost("rating")]
         public async Task<IActionResult> Rating(int id, int point)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -337,7 +415,7 @@ namespace vnLab.Controllers
             return RedirectToPage("/Account/Login", new { area = "Identity" });
         }
 
-
+        [Route("rating")]
         public async Task<IActionResult> Favorite()
         {
             return View(await _context.UserTags.Include(x => x.User).OrderByDescending(x => x.Number)

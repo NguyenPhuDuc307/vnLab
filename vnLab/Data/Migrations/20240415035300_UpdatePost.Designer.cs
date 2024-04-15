@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using vnLab.Data;
 
@@ -11,9 +12,11 @@ using vnLab.Data;
 namespace vnLab.Data.Migrations
 {
     [DbContext(typeof(vnLabDbContext))]
-    partial class vnLabDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240415035300_UpdatePost")]
+    partial class UpdatePost
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using vnLab.Data;
 using vnLab.Data.Entities;
-using vnLab.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<vnLabDbContext>(options =>
@@ -24,9 +23,6 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 //DbInitializer
 builder.Services.AddTransient<DbInitializer>();
-
-//DI configuration
-builder.Services.AddTransient<IPostsService, PostsService>();
 
 var app = builder.Build();
 

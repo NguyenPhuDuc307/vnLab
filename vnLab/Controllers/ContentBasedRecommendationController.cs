@@ -17,6 +17,7 @@ namespace vnLab.Controllers
             _userManager = userManager;
         }
 
+        [Route("content-based-recommendation")]
         public async Task<IActionResult> Index()
         {
             if (!User.Identity!.IsAuthenticated)
@@ -133,8 +134,8 @@ namespace vnLab.Controllers
         {
             // Đặt các trọng số cho các yếu tố
             double similarityWeight = 0.6;
-            double viewCountWeight = 0.3;
-            double lastModifiedWeight = 0.1;
+            double viewCountWeight = 0.2;
+            double lastModifiedWeight = 0.2;
 
             // Tính toán điểm đề xuất sử dụng các yếu tố và trọng số
             double recommendationScore = (similarity * similarityWeight) + (viewCount * viewCountWeight) + (CalculateLastModifiedScore(lastModified) * lastModifiedWeight);

@@ -9,4 +9,5 @@ public class User : IdentityUser
     [Required]
     public string? FullName { get; set; }
     public ICollection<UserTag>? UserTags { get; set; }
+    public ICollection<Post>? Posts { get; set; }
 }

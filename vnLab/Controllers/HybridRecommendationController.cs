@@ -17,6 +17,7 @@ namespace vnLab.Controllers
             _userManager = userManager;
         }
 
+        [Route("hybrid-recommendation")]
         public async Task<IActionResult> Index()
         {
             if (!User.Identity!.IsAuthenticated)
@@ -41,7 +42,7 @@ namespace vnLab.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
             {
-                throw new InvalidOperationException("User not found.");
+                return new List<Recommendation>();
             }
 
             // Thực hiện thuật toán Collaborative Filtering để đề xuất bài viết
@@ -52,7 +53,7 @@ namespace vnLab.Controllers
 
             if (currentUserRatings.Count == 0)
             {
-                throw new InvalidOperationException("User has no ratings in the database.");
+                return new List<Recommendation>();
             }
 
             var recommendations = new List<Recommendation>();
@@ -134,7 +135,7 @@ namespace vnLab.Controllers
         }
         private double CalculateRecommendationScore(double ratingScore, int viewCount, DateTime lastModified, int userInteractions)
         {
-            double recommendationScore = (ratingScore * 0.4) + (viewCount * 0.3) + (userInteractions * 0.2) + ((DateTime.UtcNow - lastModified).TotalDays * 0.1);
+            double recommendationScore = (ratingScore * 0.6) + (viewCount * 0.2) + (userInteractions * 0.2) + ((DateTime.UtcNow - lastModified).TotalDays * 0.1);
             return recommendationScore;
         }
         private async Task<List<string>> GetUserTags(string userId, int topCount)
@@ -196,8 +197,8 @@ namespace vnLab.Controllers
         {
             // Đặt các trọng số cho các yếu tố
             double similarityWeight = 0.6;
-            double viewCountWeight = 0.3;
-            double lastModifiedWeight = 0.1;
+            double viewCountWeight = 0.2;
+            double lastModifiedWeight = 0.2;
 
             // Tính toán điểm đề xuất sử dụng các yếu tố và trọng số
             double recommendationScore = (similarity * similarityWeight) + (viewCount * viewCountWeight) + (CalculateLastModifiedScore(lastModified) * lastModifiedWeight);

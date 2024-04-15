@@ -9,5 +9,7 @@ public class Post
     public DateTime Modified { get; set; }
     public int Viewed { get; set; }
     public string? Tags { get; set; }
+    public string? UserId { get; set; }
+    public User? User { get; set; }
     public ICollection<PostTag>? PostTags { get; set; }
 }
