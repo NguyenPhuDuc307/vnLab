@@ -1,0 +1,33 @@
+@model List<UserTag>
+
+@{
+    ViewData["Title"] = "Favorite Users Page";
+}
+
+<h1>ContentBased Recommendation Page</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                User
+            </th>
+            <th>
+                Tags
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.User!.FullName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TagId)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

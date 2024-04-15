@@ -1,0 +1,31 @@
+﻿@model List<Recommendation>
+
+@{
+    ViewData["Title"] = "ContentBased Recommendation Page";
+    ViewData["Heading"] = "ContentBased Recommendation Page";
+}
+
+<div class="row row-cols-1 row-cols-lg-2 g-4">
+    @foreach (var item in Model)
+    {
+        <div class="col">
+            <div class="card card-primary card-outline">
+                <div class="card-body">
+                    <a asp-controller="Posts" asp-action="Details" asp-route-id="@item.Id">
+                        <h5 class="card-title text-bold">@Html.DisplayFor(modelItem => item.Title)</h5>
+                    </a>
+                    <br>
+                    Last Modified: @Html.DisplayFor(modelItem => item.Modified)
+                    <br>
+                    Viewed: @Html.DisplayFor(modelItem => item.Viewed)
+                    <p class="card-text">
+                        @foreach (var tag in item.Tags!.Split(','))
+                        {
+                            <small class="badge badge-primary">@tag</small>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
