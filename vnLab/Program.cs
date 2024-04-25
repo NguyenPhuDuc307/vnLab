@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using vnLab.Data;
 using vnLab.Data.Entities;
+using vnLab.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<vnLabDbContext>(options =>
@@ -16,7 +17,14 @@ builder.Services.AddIdentity<User, IdentityRole>()
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+
 builder.Services.AddRazorPages();
+
+#region Authorization
+
+AddAuthorizationPolicies();
+
+#endregion
 
 //AutoMapper config
 builder.Services.AddAutoMapper(typeof(Program));
@@ -35,13 +43,14 @@ if (!app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error");
+    // app.UseExceptionHandler("/Home/Error");
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -72,3 +81,17 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+void AddAuthorizationPolicies()
+{
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("EmployeeOnly", policy => policy.RequireClaim("EmployeeNumber"));
+    });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy(Constants.Policies.RequireAdmin, policy => policy.RequireRole(Constants.Roles.Administrator));
+        options.AddPolicy(Constants.Policies.RequireMember, policy => policy.RequireRole(Constants.Roles.Member));
+    });
+}

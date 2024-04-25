@@ -1,3 +1,10 @@
+@using Microsoft.AspNetCore.Identity
+@using vnLab.Data.Entities
+
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+
 @model vnLab.Data.Entities.Post
 
 @{
@@ -17,6 +24,12 @@
         </dt>
         <dd class="col-sm-10">
             @Html.Raw(Model.Content)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.User.UserName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.User.Email)
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Asked)
@@ -41,9 +54,12 @@
         </dt>
         <dd class="col-sm-10">
             <p class="card-text">
-                @foreach (var tag in Model.Tags!.Split(','))
+                @if (Model.Tags != null)
                 {
-                    <small class="badge badge-primary">@tag</small>
+                    foreach (var tag in Model.Tags.Split(','))
+                    {
+                        <small class="badge badge-primary">@tag</small>
+                    }
                 }
             </p>
         </dd>
@@ -64,6 +80,18 @@
     </form>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        var roles = await UserManager.GetRolesAsync(user!);
+        var isAdmin = roles.Contains("Admin");
+
+        @if (isAdmin || (Model.User != null && UserManager.GetUserName(User) == Model.User.UserName))
+        {
+            <a asp-action="Edit" asp-route-id="@Model?.Id">Chỉnh sửa |</a>
+            <a asp-action="Delete" class="text-danger" asp-route-id="@Model?.Id">Xóa bài viết |</a>
+        }
+    }
+
+    <a asp-action="Index">Trở lại danh sách</a>
 </div>

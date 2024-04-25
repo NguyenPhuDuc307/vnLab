@@ -1,8 +1,8 @@
 ﻿@model List<Recommendation>
 
 @{
-    ViewData["Title"] = "Collaborative Filtering Page";
-    ViewData["Heading"] = "Collaborative Filtering Page";
+    ViewData["Title"] = "Đề xuất bài viết (Collaborative Filtering)";
+    ViewData["Heading"] = "Đề xuất bài viết (Collaborative Filtering)";
 }
 
 <div class="row row-cols-1 row-cols-lg-2 g-4">
@@ -15,13 +15,16 @@
                         <h5 class="card-title text-bold">@Html.DisplayFor(modelItem => item.Title)</h5>
                     </a>
                     <br>
-                    Last Modified: @Html.DisplayFor(modelItem => item.Modified)
+                    Ngày cập nhật: @Html.DisplayFor(modelItem => item.Modified)
                     <br>
-                    Viewed: @Html.DisplayFor(modelItem => item.Viewed)
+                    Lượt xem: @Html.DisplayFor(modelItem => item.Viewed)
                     <p class="card-text">
-                        @foreach (var tag in item.Tags!.Split(','))
+                        @if (item.Tags != null)
                         {
-                            <small class="badge badge-primary">@tag</small>
+                            foreach (var tag in item.Tags.Split(','))
+                            {
+                                <small class="badge badge-primary">@tag</small>
+                            }
                         }
                     </p>
                 </div>

@@ -46,7 +46,7 @@ namespace vnLab.Controllers
                 || s.Content!.Contains(searchString)
                 || s.Tags!.Contains(searchString));
             }
-            return View(PaginatedList<Post>.Create(await posts.ToListAsync(), pageNumber ?? 1, 20));
+            return View(PaginatedList<Post>.Create(await posts.OrderByDescending(x => x.Modified).ToListAsync(), pageNumber ?? 1, 20));
         }
 
         // GET: Posts/Details/5
@@ -309,7 +309,7 @@ namespace vnLab.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("edit")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content,Asked,Modified,Viewed")] Post post)
+        public async Task<IActionResult> Edit(int id, Post post)
         {
             if (id != post.Id)
             {

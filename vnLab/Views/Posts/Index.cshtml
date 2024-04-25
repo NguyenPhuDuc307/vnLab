@@ -1,8 +1,8 @@
 @model PaginatedList<Post>
 
 @{
-    ViewData["Title"] = "View All Posts";
-    ViewData["Heading"] = "View All Posts";
+    ViewData["Title"] = "Bài viết mới nhất";
+    ViewData["Heading"] = "Bài viết mới nhất";
 }
 
 @* <p>
@@ -23,13 +23,16 @@
                         <h5 class="card-title text-bold">@Html.DisplayFor(modelItem => item.Title)</h5>
                     </a>
                     <br>
-                    Last Modified: @Html.DisplayFor(modelItem => item.Modified)
+                    Ngày cập nhật: @Html.DisplayFor(modelItem => item.Modified)
                     <br>
-                    Viewed: @Html.DisplayFor(modelItem => item.Viewed)
+                    Lượt xem: @Html.DisplayFor(modelItem => item.Viewed)
                     <p class="card-text">
-                        @foreach (var tag in item.Tags!.Split(','))
+                        @if (item.Tags != null)
                         {
-                            <small class="badge badge-primary">@tag</small>
+                            foreach (var tag in item.Tags.Split(','))
+                            {
+                                <small class="badge badge-primary">@tag</small>
+                            }
                         }
                     </p>
                 </div>
@@ -45,8 +48,8 @@
 }
 
 <a asp-action="Index" asp-route-pageNumber="@(Model.PageIndex - 1)" class="btn btn-default @prevDisabled">
-    Previous
+    Trang trước
 </a>
 <a asp-action="Index" asp-route-pageNumber="@(Model.PageIndex + 1)" class="btn btn-default @nextDisabled">
-    Next
+    Trang sau
 </a>

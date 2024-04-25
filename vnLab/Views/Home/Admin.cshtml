@@ -1,0 +1,83 @@
+﻿@model PaginatedList<Post>
+
+@{
+    ViewData["Title"] = "Quản lý";
+    ViewData["Heading"] = "Quản lý";
+}
+
+@* <p>
+<a asp-action="Create">Create New</a>
+</p>
+<p>
+<a asp-action="Import">Import file (CSV)</a>
+</p> *@
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model[0].Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model[0].Asked)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model[0].Modified)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model[0].Viewed)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model[0].Tags)
+            </th>
+            <th>
+                Người đăng
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <a asp-controller="Posts" asp-action="Details" asp-route-id="@item.Id">@Html.DisplayFor(modelItem =>
+                    item.Title)</a>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Asked)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Modified)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Viewed)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Tags)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.User.UserName)
+                </td>
+                <td>
+                    <a asp-controller="Posts" asp-action="Edit" asp-route-id="@item.Id">Chỉnh sửa</a> |
+                    <a asp-controller="Posts" asp-action="Delete" asp-route-id="@item.Id">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- /.col-md-6 -->
+</div>
+@{
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+}
+
+<a asp-action="Index" asp-route-pageNumber="@(Model.PageIndex - 1)" class="btn btn-default @prevDisabled">
+    Trang trước
+</a>
+<a asp-action="Index" asp-route-pageNumber="@(Model.PageIndex + 1)" class="btn btn-default @nextDisabled">
+    Trang sau
+</a>
