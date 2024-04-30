@@ -1,4 +1,12 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using vnLab.Data.Entities
+
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -114,14 +122,18 @@
                                 </p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a asp-controller="Posts" asp-action="Create" class="nav-link">
-                                <i class="bi bi-plus-square-fill me-1"></i>
-                                <p>
-                                    Tạo bài viết mới
-                                </p>
-                            </a>
-                        </li>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item">
+                                <a asp-controller="Posts" asp-action="Create" class="nav-link">
+                                    <i class="bi bi-plus-square-fill me-1"></i>
+                                    <p>
+                                        Tạo bài viết mới
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
                         <li class="nav-item">
                             <a href="#" class="nav-link">
                                 <i class="bi bi-vinyl-fill"></i>
