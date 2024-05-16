@@ -1,0 +1,55 @@
+@model PaginatedList<Post>
+
+@{
+    ViewData["Title"] = "Bài viết theo danh mục";
+    ViewData["Heading"] = "Bài viết theo danh mục";
+}
+
+@* <p>
+<a asp-action="Create">Create New</a>
+</p>
+<p>
+<a asp-action="Import">Import file (CSV)</a>
+</p> *@
+
+
+<div class="row row-cols-1 row-cols-lg-2 g-4">
+    @foreach (var item in Model)
+    {
+        <div class="col">
+            <div class="card card-primary card-outline">
+                <div class="card-body">
+                    <a asp-controller="Posts" asp-action="Details" asp-route-id="@item.Id">
+                        <h5 class="card-title text-bold">@Html.DisplayFor(modelItem => item.Title)</h5>
+                    </a>
+                    <br>
+                    Ngày cập nhật: @Html.DisplayFor(modelItem => item.Modified)
+                    <br>
+                    Lượt xem: @Html.DisplayFor(modelItem => item.Viewed)
+                    <p class="card-text">
+                        @if (item.Tags != null)
+                        {
+                            foreach (var tag in item.Tags.Split(','))
+                            {
+                                <small class="badge badge-primary">@tag</small>
+                            }
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+<!-- /.col-md-6 -->
+</div>
+@{
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+}
+
+<a asp-action="Index" asp-route-pageNumber="@(Model.PageIndex - 1)" class="btn btn-default @prevDisabled">
+    Trang trước
+</a>
+<a asp-action="Index" asp-route-pageNumber="@(Model.PageIndex + 1)" class="btn btn-default @nextDisabled">
+    Trang sau
+</a>

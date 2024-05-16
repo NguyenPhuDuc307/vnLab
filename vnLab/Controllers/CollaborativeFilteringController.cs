@@ -32,36 +32,35 @@ namespace vnLab.Controllers
 
         public async Task<List<Recommendation>> RecommendArticles(int numRecommendations)
         {
+            // Lấy thông tin người dùng hiện tại
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
             {
-                throw new InvalidOperationException("User not found.");
+                throw new InvalidOperationException("Không tìm thấy người dùng.");
             }
 
+            // Lấy tất cả các đánh giá của người dùng hiện tại từ cơ sở dữ liệu
             var currentUserRatings = await _context.Interactions
                 .Where(r => r.UserId == currentUser.Id)
-                .Select(r => r.PostId)
-                .ToListAsync();
+                .ToDictionaryAsync(r => r.PostId, r => r.Rating);
 
-            if (currentUserRatings.Count == 0)
+            if (!currentUserRatings.Any())
             {
-                throw new InvalidOperationException("User has no ratings in the database.");
+                throw new InvalidOperationException("Người dùng không có đánh giá trong cơ sở dữ liệu.");
             }
+
+            // Lấy danh sách tất cả các bài viết và đánh giá từ cơ sở dữ liệu
+            var allPosts = await _context.Posts.ToListAsync();
+            var allInteractions = await _context.Interactions.ToListAsync();
 
             var recommendations = new List<Recommendation>();
 
-            var allPosts = await _context.Posts.ToListAsync();
             foreach (var post in allPosts)
             {
-                double ratingScore = currentUserRatings.Contains(post.Id) ? 1 : 0;
-                int viewCount = post.Viewed;
-                DateTime lastModified = post.Modified;
-                int userInteractions = await _context.Interactions
-                    .Where(r => r.PostId == post.Id && r.UserId == currentUser.Id)
-                    .CountAsync();
+                // Tính điểm đề xuất cho từng bài viết dựa trên cosine similarity
+                double cosineSimilarity = CalculateCosineSimilarity(currentUserRatings, post.Id, allInteractions);
 
-                double recommendationScore = CalculateRecommendationScore(ratingScore, viewCount, lastModified, userInteractions);
-
+                // Thêm bài viết và điểm đề xuất vào danh sách gợi ý
                 recommendations.Add(new Recommendation
                 {
                     Id = post.Id,
@@ -71,19 +70,44 @@ namespace vnLab.Controllers
                     Modified = post.Modified,
                     Viewed = post.Viewed,
                     Tags = post.Tags,
-                    Score = recommendationScore
+                    Score = cosineSimilarity
                 });
             }
 
+            // Sắp xếp danh sách gợi ý theo điểm đề xuất giảm dần
             recommendations = recommendations.OrderByDescending(r => r.Score).ToList();
 
+            // Trả về số lượng gợi ý theo yêu cầu
             return recommendations.Take(numRecommendations).ToList();
         }
 
-        private double CalculateRecommendationScore(double ratingScore, int viewCount, DateTime lastModified, int userInteractions)
+        private double CalculateCosineSimilarity(Dictionary<int, int> currentUserRatings, int postId, List<Interaction> allInteractions)
         {
-            double recommendationScore = (ratingScore * 0.5) + (viewCount * 0.2) + (userInteractions * 0.2) + ((DateTime.UtcNow - lastModified).TotalDays * 0.1);
-            return recommendationScore;
+            // Tìm tất cả các bài đánh giá của những người dùng khác với bài viết cụ thể
+            var otherRatings = allInteractions
+                .Where(r => r.PostId == postId)
+                .ToList();
+
+            // Nếu không có đánh giá nào khác, trả về 0
+            if (!otherRatings.Any()) return 0;
+
+            // Tạo vector cho điểm đánh giá của người dùng hiện tại và các người dùng khác
+            var userRatingsVector = currentUserRatings.Values.ToArray();
+            var otherRatingsVector = otherRatings.Select(r => r.Rating).ToArray();
+
+            // Tính cosine similarity
+            double dotProduct = 0, userMagnitude = 0, otherMagnitude = 0;
+            for (int i = 0; i < userRatingsVector.Length; i++)
+            {
+                dotProduct += userRatingsVector[i] * otherRatingsVector[i];
+                userMagnitude += Math.Pow(userRatingsVector[i], 2);
+                otherMagnitude += Math.Pow(otherRatingsVector[i], 2);
+            }
+
+            userMagnitude = Math.Sqrt(userMagnitude);
+            otherMagnitude = Math.Sqrt(otherMagnitude);
+
+            return (userMagnitude * otherMagnitude == 0) ? 0 : dotProduct / (userMagnitude * otherMagnitude);
         }
     }
 }

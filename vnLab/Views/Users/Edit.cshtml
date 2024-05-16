@@ -1,0 +1,64 @@
+@model vnLab.Data.Entities.User
+
+@{
+    ViewData["Title"] = "Edit user: " + Model.Email;
+    ViewData["Heading"] = "Edit user: " + Model.Email;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Users" asp-action="Index">User</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Edit user: @Model.Email</li>
+    </ol>
+</nav>
+
+<form asp-action="Edit">
+    <div class="row">
+        <div class="col-md-4">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="FullName" class="control-label"></label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PhoneNumber" class="control-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="UserName" class="form-control" />
+        <input type="hidden" asp-for="NormalizedUserName" class="form-control" />
+        <input type="hidden" asp-for="NormalizedEmail" class="form-control" />
+        <input type="hidden" class="form-check-input" asp-for="EmailConfirmed" />
+        <input type="hidden" asp-for="PasswordHash" class="form-control" />
+        <input type="hidden" asp-for="SecurityStamp" class="form-control" />
+        <input type="hidden" asp-for="ConcurrencyStamp" class="form-control" />
+        <input type="hidden" class="form-check-input" asp-for="PhoneNumberConfirmed" />
+        <input type="hidden" class="form-check-input" asp-for="TwoFactorEnabled" />
+        <input type="hidden" asp-for="LockoutEnd" class="form-control" />
+        <input type="hidden" class="form-check-input" asp-for="LockoutEnabled" />
+        <input type="hidden" asp-for="AccessFailedCount" class="form-control" />
+
+    </div>
+    </div>
+</form>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

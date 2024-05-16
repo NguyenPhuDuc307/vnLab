@@ -1,0 +1,23 @@
+@model List<PostTag>
+
+@using Microsoft.AspNetCore.Html
+<li class="nav-item menu-open">
+    <a href="#" class="nav-link">
+        <i class="bi bi-grip-vertical"></i>
+        <p>
+            Danh mục phổ biến
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+    <ul class="nav nav-treeview">
+        @foreach (var tag in Model)
+        {
+            <li class="nav-item">
+                <a asp-controller="Home" asp-action="PostByTag" asp-route-tag="@tag.Tag!.Name" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>@tag.Tag!.Name</p>
+                </a>
+            </li>
+        }
+    </ul>
+</li>

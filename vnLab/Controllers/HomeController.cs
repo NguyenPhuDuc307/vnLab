@@ -55,6 +55,16 @@ public class HomeController : Controller
         return View(PaginatedList<Post>.Create(await posts.OrderByDescending(x => x.Modified).ToListAsync(), pageNumber ?? 1, 20));
     }
 
+    public async Task<IActionResult> PostByTag(string tag, int? pageNumber)
+    {
+
+        var posts = from m in _context.Posts select m;
+
+        posts = posts.Where(x => x.Tags!.Contains(tag));
+
+        return View(PaginatedList<Post>.Create(await posts.OrderByDescending(x => x.Modified).ToListAsync(), pageNumber ?? 1, 20));
+    }
+
     public async Task<IActionResult> Index(string currentFilter, string searchString, int? pageNumber)
     {
         if (searchString != null)
