@@ -5,15 +5,8 @@
     ViewData["Heading"] = "View all users";
 }
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">View all users</li>
-    </ol>
-</nav>
-
 <p>
-    <a asp-action="Create">Create a new user</a>
+    <a asp-action="Create">Tạo người dùng mới</a>
 </p>
 <table class="table">
     <thead>
@@ -35,18 +28,16 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.FullName)
-                </td>
+                    Họ tên </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Email)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.PhoneNumber)
-                </td>
+                    Số điện thoại </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.Id">Chỉnh sửa</a> |
+                    <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id">Chi tiết</a> |
+                    <a class="btn btn-danger btn-sm" asp-action="Delete" asp-route-id="@item.Id">xóa</a>
                 </td>
             </tr>
         }

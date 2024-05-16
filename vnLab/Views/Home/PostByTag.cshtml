@@ -13,6 +13,44 @@
 </p> *@
 
 
+<div id="carouselExampleDark" class="carousel carousel-dark slide">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="0" class="active"
+            aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="1" aria-label="Slide 2"></button>
+    </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active" data-bs-interval="10000">
+            <img style="height: 20rem;" src="https://cdn.sstatic.net/Img/home/illo-public.svg?v=14bd5a506009"
+                class="d-block w-100" alt="...">
+            <div class="carousel-caption d-none d-md-block">
+                <h5>Một nền tảng công cộng xây dựng bộ sưu tập các câu hỏi và câu trả lời về mã hóa
+                    chính xác</h5>
+                <p>Một không gian dựa vào cộng đồng để tìm kiếm và đóng góp câu trả lời cho những
+                    thách thức kỹ thuật, và là một trong những trang web phổ biến nhất trên thế
+                    giới.</p>
+            </div>
+        </div>
+        <div class="carousel-item" data-bs-interval="2000">
+            <img style="height: 20rem;" src="https://cdn.sstatic.net/Img/home/illo-teams.svg?v=7e543f14fcc0"
+                class="d-block w-100" alt="...">
+            <div class="carousel-caption d-none d-md-block">
+                <h5>Nền tảng SaaS chia sẻ kiến thức và cộng tác riêng tư dành cho các công ty</h5>
+                <p>Nền tảng dựa trên web để tăng năng suất, giảm thời gian chu kỳ, tăng tốc thời
+                    gian để tiếp thị và bảo vệ kiến thức của tổ chức.</p>
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
 <div class="row row-cols-1 row-cols-lg-2 g-4">
     @foreach (var item in Model)
     {
